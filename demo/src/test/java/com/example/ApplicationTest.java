@@ -1,36 +1,51 @@
 package com.example;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvFileSource;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.util.Optional;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.example.interfaces.UserRepository;
+import com.example.models.User;
+import com.example.servicios.UserService;
 
 class ApplicationTest {
 
-    private final PrintStream printStream = System.out;
+    @Test
+    public void testGetUserNameById() {
+        // 1. Crear un mock de UserRepository
+        UserRepository mockRepository = mock(UserRepository.class);
 
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        // 2. Configurar el comportamiento del mock
+        Long userId = 1L;
+        User mockUser = new User(userId, "Betha");
+        when(mockRepository.findById(userId)).thenReturn(Optional.of(mockUser));
 
-    @BeforeEach
-    public void setUp(){
-        System.setOut(new PrintStream(outputStream));
+        // 3. Probar UserService
+        UserService userService = new UserService(mockRepository);
+        String userName = userService.getUserNameById(userId);
+
+        // 4. Verificar resultados
+        assertEquals("Betha", userName);
     }
 
-    @AfterEach
-    public void tearDown(){
-        System.setOut(printStream);
-    }
+    @Test
+    public void testGetUserNameById_UserNotFound() {
+        // 1. Crear un mock de UserRepository
+        UserRepository mockRepository = mock(UserRepository.class);
 
+        // 2. Configurar el mock para que devuelva un Optional vacío
+        Long userId = 2L;
+        when(mockRepository.findById(userId)).thenReturn(Optional.empty());
 
-    @ParameterizedTest
-    @CsvFileSource(resources = "/csv/notas.csv")
-    void itShouldReturnTheCorrectLetterForTheCalification(int calification, String letra) {
-        assertEquals(letra, Application.obtenerNota(calification));
+        // 3. Probar UserService
+        UserService userService = new UserService(mockRepository);
+        String userName = userService.getUserNameById(userId);
+
+        // 4. Verificar resultados
+        assertEquals("Usuario no encontrado", userName);
     }
 }
